@@ -1,4 +1,5 @@
 import { lyric } from "./mod/lyric"
+import { playurl } from "./mod/play"
 
 async function Main(request: Request): Promise<Response> {
 
@@ -8,9 +9,17 @@ async function Main(request: Request): Promise<Response> {
 
     //console.log(JSON.stringify(pathPart))
 
-    switch (pathPart[1]) {
-        case "lyric": return await lyric(requestURL.searchParams)
+    var idi = requestURL.searchParams.get("id")
+    if (!idi) return new Response("no id")
+    var id = parseInt(idi)
 
+    switch (pathPart[1]) {
+        case "lyric": return await lyric(id, requestURL.searchParams.get("conver"))
+        case "play":
+            var brr = requestURL.searchParams.get("br")
+            if (brr)
+                return await playurl(id, parseInt(brr))
+            else return await playurl(id, 1280000)
         default:
             return new Response("")
     }

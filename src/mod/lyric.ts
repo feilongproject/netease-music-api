@@ -1,16 +1,15 @@
 /**
- * 当url的SearchParams中的conver为以下值时,执行操作：
+ * 当conver为以下值时,执行操作:
  * 1:返回原始歌词,格式为lrc;
  * 2:返回翻译歌词,格式为lrc;
  * 3:返回原始歌词与翻译合并后结果,格式为lrc;
  * 其他值或为空:返回原始数据,格式为json;
- * @param query 传入URLSearchParams
+ * @param id 歌曲id号
+ * @param conver 操作选项
  * @returns 返回response
  */
-export async function lyric(query: URLSearchParams): Promise<Response> {
+export async function lyric(id: number, conver: string | null): Promise<Response> {
 
-    var id = query.get("id")
-    if (!id) return new Response("no id")
 
     console.log(`start get lyric,id: ${id}`)
 
@@ -22,7 +21,6 @@ export async function lyric(query: URLSearchParams): Promise<Response> {
         return res
     })
 
-    var conver = query.get("conver")
     var decode: lyricDef = JSON.parse(res)
     switch (conver) {
         case "1": return new Response(decode.lrc.lyric)
@@ -63,20 +61,31 @@ function mergeLrc(soureLrc: string, transLrc: string): string {
         var tLineTime: any = timePattern.exec(tLrcCut[tiv])
         var sLineLrc = sLrcCut[siv].split(/^\[.*?\]/)[1]
         var tLineLrc = tLrcCut[tiv].split(/^\[.*?\]/)[1]
-        //console.log(sLineCut)
+        //console.log(`${sLineLrc}->${tLineLrc}<-`)
 
-        //console.log(`${sLineTime}--${tLineTime}    ${siv}-${tiv}`)
+        //console.log(`${sLineTime}-${tLineTime}---${siv}-${tiv}`)
 
         var stime = ConverTime(sLineTime[0].split(/[\[\]]/)[1])
         var ttime = ConverTime(tLineTime[0].split(/[\[\]]/)[1])
         //console.log(`${stime}--${ttime}`)
 
 
-        if (stime == ttime) siv++, tiv++, mergeLrc += `${sLineTime[0]}${sLineLrc}${sLineLrc == tLineLrc ? `` : `【${tLineLrc}】`}\n`
-        else if (stime < ttime) siv++, mergeLrc += `${sLineTime[0]}${sLineLrc}\n`
+
+        if ((stime == ttime) && tLineLrc) {
+            siv++;
+            tiv++;
+            mergeLrc += `${sLineTime[0]}${sLineLrc}${sLineLrc == tLineLrc ? `` : `【${tLineLrc}】`}\n`
+        } else if (stime == ttime) {
+            siv++;
+            tiv++;
+            mergeLrc += `${sLineTime[0]}${sLineLrc}\n`
+        } else if (stime < ttime) {
+            siv++;
+            mergeLrc += `${sLineTime[0]}${sLineLrc}\n`
+        }
 
 
-
+        //console.log('\n')
 
     }
 
